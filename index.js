@@ -2,6 +2,7 @@ const express = require("express");
 const mongoose = require("mongoose");
 const cors = require("cors");
 const userRouter = require("./routes/user-handler");
+require("dotenv").config();
 
 const app = express();
 app.use(express.json());
@@ -9,7 +10,7 @@ app.use(cors());
 
 const PORT = 9000;
 
-const MONGO_DB_URL = "mongodb://localhost:27017/chat-app";
+const MONGO_DB_URL = process.env.MONGODB_DB_URL;
 
 mongoose
   .connect(MONGO_DB_URL, {})
