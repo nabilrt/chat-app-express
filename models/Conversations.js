@@ -1,10 +1,11 @@
 const mongoose = require("mongoose");
-import { messageSchema } from "./Message";
+const messageSchema = require("./Message");
+const { Schema } = mongoose;
 
-const conversationSchema = mongoose.Schema({
+const conversationSchema = Schema({
   participants: [
     {
-      type: mongoose.Schema.Types.ObjectId,
+      type: Schema.Types.ObjectId,
       ref: "User",
     },
   ],

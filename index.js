@@ -2,6 +2,7 @@ const express = require("express");
 const mongoose = require("mongoose");
 const cors = require("cors");
 const userRouter = require("./routes/user-handler");
+const conversationRouter = require("./routes/conversation-handler");
 require("dotenv").config();
 
 const app = express();
@@ -28,6 +29,7 @@ app.get("/", function (req, res) {
 });
 
 app.use("/user", userRouter);
+app.use("/conversation", conversationRouter);
 
 app.listen(PORT, function () {
   console.log(`Server started at PORT ${PORT}`);

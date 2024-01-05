@@ -5,6 +5,7 @@ const User = require("../models/User");
 const checkLogin = require("../middlewares/Auth");
 const cloudinaryConfig = require("../config/cloudinary");
 const fs = require("fs");
+const jwt = require("jsonwebtoken");
 
 const userRouter = express.Router();
 

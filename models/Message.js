@@ -1,7 +1,10 @@
 const mongoose = require("mongoose");
-
-const messageSchema = mongoose.Schema({
+const { Schema } = mongoose;
+const messageSchema = Schema({
   message: {
+    type: String,
+  },
+  attachment: {
     type: String,
   },
   sender: {
