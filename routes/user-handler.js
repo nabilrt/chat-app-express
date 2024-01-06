@@ -153,4 +153,64 @@ userRouter.get("/allUsers", checkLogin, async function (req, res) {
   }
 });
 
+userRouter.post("/picture", checkLogin, upload, async (req, res) => {
+  try {
+    const file = req.file;
+    const image = await cloudinaryConfig.uploader.upload(
+      file.path,
+      {
+        folder: "chat-app",
+      },
+      (err, result) => {
+        if (err) {
+          return res.status(500).json({
+            message: "Internal Server Error",
+          });
+        }
+      }
+    );
+    const avatar = image.secure_url;
+    await User.updateOne(
+      { _id: req.userData.userId },
+      { $set: { avatar: avatar } }
+    );
+    fs.unlinkSync(file.path);
+    res.status(200).json({
+      message: "Profile Picture Updated",
+    });
+  } catch (err) {
+    res.status(500).json({
+      message: err.message,
+    });
+  }
+});
+
+userRouter.post("/update", checkLogin, async (req, res) => {
+  try {
+    const { name, password } = req.body;
+    if (password === "") {
+      await User.updateOne(
+        { _id: req.userData.userId },
+        { $set: { name: name } }
+      );
+      res.status(200).json({
+        message: "Profile Updated",
+      });
+    } else {
+      const hashedPassword = await bcrypt.hash(password, 10);
+      await User.updateOne(
+        { _id: req.userData.userId },
+        { $set: { name: name, password: hashedPassword } }
+      );
+      res.status(200).json({
+        message: "Profile Updated",
+      });
+    }
+  } catch (err) {
+    res.status(500).json({
+      message: err.message,
+    });
+  }
+});
+
 module.exports = userRouter;
