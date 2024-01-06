@@ -145,4 +145,18 @@ conversationRouter.post("/upload/:id", checkLogin, upload, async (req, res) => {
   }
 });
 
+conversationRouter.delete("/:id", checkLogin, async (req, res) => {
+  try {
+    const conversationId = req.params.id;
+    await Conversation.deleteOne({ _id: conversationId });
+    return res.status(200).json({
+      message: "Conversation Deleted",
+    });
+  } catch (err) {
+    return res.status(500).json({
+      message: "Internal Server Error",
+    });
+  }
+});
+
 module.exports = conversationRouter;

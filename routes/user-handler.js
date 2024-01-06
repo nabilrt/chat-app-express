@@ -8,6 +8,7 @@ const fs = require("fs");
 const jwt = require("jsonwebtoken");
 const Conversation = require("../models/Conversations");
 const differenceBy = require("lodash.differenceby");
+require("dotenv").config();
 
 const userRouter = express.Router();
 
@@ -15,40 +16,61 @@ userRouter.post("/signup", upload, async (req, res) => {
   try {
     const { name, email, password } = req.body;
     const file = req.file;
-    if (!name && !email && !password && !file) {
-      return res.status(400).json({
-        message: "Fill up all the fields",
+    if (file) {
+      if (!name && !email && !password) {
+        return res.status(400).json({
+          message: "Fill up all the fields",
+        });
+      }
+      const hashedPassword = await bcrypt.hash(password, 10);
+
+      const image = await cloudinaryConfig.uploader.upload(
+        file.path,
+        {
+          folder: "chat-app",
+        },
+        (err, result) => {
+          if (err) {
+            return res.status(500).json({
+              message: "Internal Server Error",
+            });
+          }
+        }
+      );
+      const avatar = image.secure_url;
+
+      const user = new User({
+        name,
+        email,
+        password: hashedPassword,
+        avatar,
+      });
+      await user.save();
+      fs.unlinkSync(file.path);
+
+      return res.status(201).json({
+        message: "User Created",
+      });
+    } else {
+      if (!name && !email && !password) {
+        return res.status(400).json({
+          message: "Fill up all the fields",
+        });
+      }
+      const hashedPassword = await bcrypt.hash(password, 10);
+
+      const user = new User({
+        name,
+        email,
+        password: hashedPassword,
+        avatar: process.env.DEFAULT_AVATAR_URL,
+      });
+      await user.save();
+
+      return res.status(201).json({
+        message: "User Created",
       });
     }
-    const hashedPassword = await bcrypt.hash(password, 10);
-
-    const image = await cloudinaryConfig.uploader.upload(
-      file.path,
-      {
-        folder: "chat-app",
-      },
-      (err, result) => {
-        if (err) {
-          return res.status(500).json({
-            message: "Internal Server Error",
-          });
-        }
-      }
-    );
-    const avatar = image.secure_url;
-
-    const user = new User({
-      name,
-      email,
-      password: hashedPassword,
-      avatar,
-    });
-    await user.save();
-    fs.unlinkSync(file.path);
-
-    return res.status(201).json({
-      message: "User Created",
-    });
   } catch (err) {
     console.log(err);
     return res.status(500).json({
