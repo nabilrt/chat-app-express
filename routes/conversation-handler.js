@@ -16,13 +16,8 @@ conversationRouter.post("/create", checkLogin, async (req, res) => {
       });
     }
     const conversation = new Conversation({
-      participants: [participant1, participant2],
-      messages: [
-        {
-          sender: sender,
-          message: message,
-        },
-      ],
+      participants: [participant1, req.userData.userId],
+      messages: [],
     });
     const savedConverstion = await conversation.save();
     const populatedConversation = await Conversation.findById(
@@ -71,7 +66,29 @@ conversationRouter.post("/send-message/:id", checkLogin, async (req, res) => {
 
 conversationRouter.get("/list", checkLogin, async (req, res) => {
   try {
-    const conversations = await Conversation.find({})
+    const userId = req.userData.userId;
+    const conversations = await Conversation.find({
+      participants: { $in: [userId] },
+    })
+      .populate("participants")
+      .exec();
+
+    return res.status(200).json({
+      conversations: conversations,
+    });
+  } catch (err) {
+    return res.status(500).json({
+      message: "Internal Server Error",
+    });
+  }
+});
+
+conversationRouter.get("/participant/:id", checkLogin, async (req, res) => {
+  try {
+    const userId = req.params.id;
+    const conversations = await Conversation.find({
+      participants: { $all: [userId, req.userData.userId] },
+    })
       .populate("participants")
       .exec();
     return res.status(200).json({

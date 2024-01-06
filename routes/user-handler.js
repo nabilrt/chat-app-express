@@ -6,6 +6,8 @@ const checkLogin = require("../middlewares/Auth");
 const cloudinaryConfig = require("../config/cloudinary");
 const fs = require("fs");
 const jwt = require("jsonwebtoken");
+const Conversation = require("../models/Conversations");
+const differenceBy = require("lodash.differenceby");
 
 const userRouter = express.Router();
 
@@ -98,6 +100,51 @@ userRouter.get("/details", checkLogin, async function (req, res) {
     res.status(200).json({
       message: "User Details",
       user: user,
+    });
+  } catch (err) {
+    res.status(500).json({
+      message: err.message,
+    });
+  }
+});
+
+userRouter.get("/allUsers", checkLogin, async function (req, res) {
+  try {
+    const users = await User.find();
+    let convUsers = [];
+    const conversations = await Conversation.find({
+      participants: { $in: [req.userData.userId] },
+    })
+      .populate("participants")
+      .exec();
+
+    for (var i = 0; i < conversations.length; i++) {
+      for (var j = 0; j < conversations[i].participants.length; j++) {
+        if (
+          conversations[i].participants[j]._id != req.userData.userId &&
+          !convUsers.includes(conversations[i].participants[j]._id)
+        ) {
+          convUsers.push(conversations[i].participants[j]);
+        }
+      }
+    }
+
+    function findMissingElements(arr1, arr2) {
+      const missingElements = arr1.filter((element1) => {
+        return !arr2.some((element2) => element2._id.equals(element1._id));
+      });
+
+      return missingElements;
+    }
+
+    const missingElements = findMissingElements(users, convUsers);
+    const updatedUser = missingElements.filter(
+      (element) => !element._id.equals(req.userData.userId)
+    );
+
+    res.status(200).json({
+      message: "All Users",
+      users: updatedUser,
     });
   } catch (err) {
     res.status(500).json({
